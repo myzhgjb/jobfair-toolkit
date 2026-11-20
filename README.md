@@ -7,9 +7,12 @@
 
 ## 在线预览
 
-**https://szpark-jobfair.app.workbuddy.host/?sharecode=24WXRWZLBC**
+| 入口 | 地址 |
+|---|---|
+| GitHub Pages（长期有效） | **https://myzhgjb.github.io/jobfair-toolkit/** |
+| WorkBuddy 托管 | https://szpark-jobfair.app.workbuddy.host/?sharecode=24WXRWZLBC |
 
-手机浏览器打开 →「添加到主屏幕」，就是一个全屏、离线可用的投递清单。
+手机浏览器打开 →「添加到主屏幕」，就是一个全屏、可离线使用的投递清单。
 
 ## 本次实例：2026-11-20 苏州工业园区秋季青年人才供需对接会（本地场）
 
