@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>11·11 参会企业与岗位全库</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#f3f5f9;--card:#fff;--line:#e3e9f2;--line2:#eef2f8;
+    --ink:#0f1a2b;--ink2:#46586e;--ink3:#8a97a9;
+    --blue:#1b4f8a;--blue2:#2b6cb0;--teal:#0e7c66;--slate:#64748b;--gray:#94a3b8;
+    --shadow:0 1px 2px rgba(16,24,40,.05),0 1px 3px rgba(16,24,40,.04);
+  }
+  body{background:var(--bg);color:var(--ink);font-size:14px;line-height:1.65;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif;
+    -webkit-font-smoothing:antialiased}
+  a{color:inherit}
+  .top{background:#fff;border-bottom:1px solid var(--line);padding:26px 0 0}
+  .wrap{max-width:1360px;margin:0 auto;padding:0 22px}
+  .kicker{font-size:11.5px;letter-spacing:.14em;color:var(--blue2);font-weight:700}
+  h1{font-size:25px;font-weight:750;letter-spacing:-.01em;margin-top:7px}
+  h1 small{font-size:14px;font-weight:500;color:var(--ink3);margin-left:8px}
+  .stats{display:flex;flex-wrap:wrap;gap:26px;margin:18px 0 0;padding-bottom:18px}
+  .st .n{font-size:23px;font-weight:750;line-height:1.15}
+  .st .n.hot{color:var(--blue2)}
+  .st .l{font-size:12px;color:var(--ink3);margin-top:2px}
+  .note{margin:0 0 16px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;
+    padding:11px 14px;font-size:12.6px;color:#78350f;line-height:1.75}
+  .note b{color:#7c2d12}
+
+  .layout{display:grid;grid-template-columns:236px minmax(0,1fr);gap:22px;align-items:start;
+    max-width:1360px;margin:18px auto 60px;padding:0 22px}
+  aside{position:sticky;top:14px;min-width:0}
+  .layout>div{min-width:0}
+  .panel{min-width:0;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;box-shadow:var(--shadow)}
+  .panel h3{font-size:12px;color:var(--ink3);font-weight:700;letter-spacing:.08em;margin-bottom:10px}
+  .catbtn{display:flex;align-items:center;gap:8px;width:100%;border:none;background:none;
+    font-family:inherit;font-size:13px;color:var(--ink2);padding:7px 8px;border-radius:8px;
+    cursor:pointer;text-align:left;transition:.14s}
+  .catbtn:hover{background:#f4f7fb}
+  .catbtn.on{background:#eaf2fb;color:var(--blue);font-weight:700}
+  .dot{width:8px;height:8px;border-radius:50%;flex:0 0 auto}
+  .catbtn .c{margin-left:auto;font-size:11.5px;color:var(--ink3);font-variant-numeric:tabular-nums}
+  .catbtn.on .c{color:var(--blue)}
+  .legend{margin-top:14px;padding-top:12px;border-top:1px solid var(--line2);font-size:11.5px;color:var(--ink3);line-height:1.9}
+  .legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+
+  .toolbar{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-bottom:14px}
+  .search{position:relative;flex:1;min-width:230px}
+  .search input,select{width:100%;border:1px solid var(--line);background:#fff;border-radius:9px;
+    padding:9px 12px;font-size:13.5px;font-family:inherit;color:var(--ink);outline:none}
+  .search input{padding-left:32px}
+  .search input:focus,select:focus{border-color:var(--blue2)}
+  .search::before{content:"⌕";position:absolute;left:11px;top:6px;font-size:17px;color:var(--ink3)}
+  select{width:auto;min-width:118px;cursor:pointer}
+  .seg{display:flex;background:#e9eef6;border-radius:9px;padding:3px}
+  .seg button{border:none;background:none;font-family:inherit;font-size:13px;color:var(--ink2);
+    padding:6px 13px;border-radius:7px;cursor:pointer}
+  .seg button.on{background:#fff;color:var(--blue);font-weight:700;box-shadow:0 1px 2px rgba(16,24,40,.08)}
+  .cnt{font-size:12px;color:var(--ink3);margin-bottom:12px}
+  .cnt b{color:var(--ink)}
+
+  /* 企业卡 */
+  .co{min-width:0;background:#fff;border:1px solid var(--line);border-radius:12px;padding:15px 17px;
+    margin-bottom:10px;box-shadow:var(--shadow)}
+  .co .hd{display:block}
+  .co .nm{font-size:15px;font-weight:700;line-height:1.45}
+  .co .nm{margin-bottom:7px}
+  .co .tags{display:flex;flex-wrap:wrap;gap:5px}
+  .tg{font-size:10.8px;padding:1.5px 8px;border-radius:5px;background:#f0f4fa;color:#54677f;font-weight:600;white-space:nowrap}
+  .tg.ind{background:#eef4fb;color:#2b6cb0}
+  .tg.emp{background:#f0f9f4;color:#0e7c66}
+  .tg.na{background:#f5f6f8;color:#98a2b3;font-weight:500}
+  .co .intro{font-size:12.6px;color:var(--ink3);margin-top:8px;line-height:1.7;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}
+  .co.open .intro{-webkit-line-clamp:unset}
+  .co .jobs{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+  .jb{font-size:11.8px;padding:2.5px 9px;border-radius:6px;border:1px solid transparent;
+    white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+  .p3{background:#eaf2fb;color:#1b4f8a;border-color:#d5e5f7;font-weight:600}
+  .p2{background:#eef8f5;color:#0b6b58;border-color:#d5ede6}
+  .p1{background:#f4f6f9;color:#5c6b7f;border-color:#e8edf4}
+  .p0{background:#f7f8fa;color:#8a97a9;border-color:#eef0f4}
+  .more{font-size:11.8px;color:var(--blue2);cursor:pointer;margin-top:9px;display:inline-block}
+
+  /* 岗位表 */
+  .tbl{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:var(--shadow)}
+  table{width:100%;border-collapse:collapse;table-layout:fixed}
+  thead th{background:#fafbfd;text-align:left;font-size:11.5px;font-weight:700;color:var(--ink3);
+    padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;letter-spacing:.03em}
+  tbody td{padding:11px 12px;border-bottom:1px solid var(--line2);vertical-align:top;font-size:12.8px;word-break:break-word}
+  tbody tr:last-child td{border-bottom:none}
+  tbody tr:hover{background:#fbfcfe}
+  .cn{font-weight:600;font-size:13px}
+  .jn{font-weight:600;color:var(--ink)}
+  .cm{color:var(--ink3);font-size:12px;line-height:1.6}
+  .tech{color:var(--ink2);font-size:11.8px;line-height:1.6}
+  .tech b{color:var(--ink3);font-weight:600}
+  .pill{display:inline-block;font-size:11px;font-weight:700;padding:1.5px 8px;border-radius:99px;white-space:nowrap}
+  .loadmore{display:block;width:100%;border:none;background:#fff;border-top:1px solid var(--line);
+    padding:14px;font-family:inherit;font-size:13px;color:var(--blue2);cursor:pointer;font-weight:600}
+  .empty{padding:44px;text-align:center;color:var(--ink3);font-size:13px}
+  footer{max-width:1360px;margin:0 auto;padding:0 22px 60px;color:var(--ink3);font-size:12px;line-height:1.9}
+  footer b{color:var(--ink2)}
+
+  @media(max-width:980px){
+    .layout{grid-template-columns:minmax(0,1fr);gap:14px;padding:0 14px}
+    aside{position:static}
+    .panel{padding:12px}
+    .catgrid{display:flex;gap:7px;overflow-x:auto;padding-bottom:4px;max-width:100%;min-width:0}
+    .catgrid::-webkit-scrollbar{display:none}
+    .catbtn{width:auto;white-space:nowrap;border:1px solid var(--line);padding:5px 11px;border-radius:99px;flex:0 0 auto}
+    .catbtn.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+    .catbtn.on .c{color:#fff;opacity:.8}
+    .legend{display:none}
+    .top{padding:18px 0 0}
+    h1{font-size:20px}
+    .stats{gap:18px;padding-bottom:14px}
+    .tbl{overflow-x:auto}
+    table{min-width:860px}
+  }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="wrap">
+    <div class="kicker">2026 校园苏州日 · 苏州高校专场</div>
+    <h1>参会企业与岗位全库 <small id="sub"></small></h1>
+    <div class="stats">
+      <div class="st"><div class="n" id="s1">—</div><div class="l">参会企业</div></div>
+      <div class="st"><div class="n" id="s2">—</div><div class="l">拆出的岗位条目</div></div>
+      <div class="st"><div class="n hot" id="s3">—</div><div class="l">重点岗位（软件 / AI / 嵌入式 / 机器人）</div></div>
+      <div class="st"><div class="n" id="s4">—</div><div class="l">电子电气类可看岗位</div></div>
+    </div>
+    <div class="note">
+      <b>关于数据边界：</b>原始 Excel 只有 6 列（单位名称 / 单位简介 / 岗位名称 / 专业要求 / 学历要求 / 需求人数），
+      <b>没有企业规模字段，也没有岗位 JD 正文</b>。所以：企业规模只有 25 家能从简介里读到准确人数，其余标为「规模未披露」；
+      岗位的「技术要求」是根据岗位名称 + 类别推断的，不是官方 JD 原文，投递前请以现场沟通为准。
+    </div>
+  </div>
+</div>
+
+<div class="layout">
+  <aside>
+    <div class="panel">
+      <h3>岗位类别</h3>
+      <div class="catgrid" id="cats"></div>
+      <div class="legend">
+        <i style="background:#2b6cb0"></i>重点：软件 / AI / 嵌入式 / 机器人<br>
+        <i style="background:#0e7c66"></i>可看：电子 / 电气 / 芯片 / 测试<br>
+        <i style="background:#94a3b8"></i>其余：机械 / 工艺 / 职能 / 销售
+      </div>
+    </div>
+  </aside>
+
+  <div>
+    <div class="toolbar">
+      <div class="search"><input id="q" type="text" placeholder="搜企业、岗位、专业，如「嵌入式」「Java」「自动化」"></div>
+      <select id="ind"><option value="">全部行业</option></select>
+      <select id="edu"><option value="">全部学历</option><option value="本科">本科</option><option value="硕士">硕士</option><option value="博士">博士</option></select>
+      <div class="seg">
+        <button class="on" data-v="co">按企业</button>
+        <button data-v="job">按岗位</button>
+      </div>
+    </div>
+    <div class="cnt" id="cnt"></div>
+    <div id="viewCo"></div>
+    <div id="viewJob" style="display:none"></div>
+  </div>
+</div>
+
+<footer>
+  数据来源：岗位需求.xlsx（参会企业岗位表，1382 行 × 6 列），解析于 2026-11-11。<br>
+  <b>分类规则：</b>按岗位名称关键词做启发式归类，一个岗位只归入一类；名称含多个岗位时按分隔符拆开分别归类。
+  <b>技术要点：</b>由类别模板 + 岗位名细分生成，非官方 JD 原文。<b>企业规模：</b>仅当简介中出现明确人数时显示，其余为「规模未披露」。
+</footer>
+
+<script id="DATA" type="application/json">__DATA__</script>
+<script>
+const D = JSON.parse(document.getElementById('DATA').textContent);
+const CATS = D.cats, TPL = D.tpl, VAR = D.var, CO = D.c;
+const PCOL = {3:'p3',2:'p2',1:'p1',0:'p0'};
+const PNAME = {3:'重点',2:'可看',1:'一般',0:'不看'};
+const PDOT = {3:'#2b6cb0',2:'#0e7c66',1:'#94a3b8',0:'#cbd5e1'};
+
+let curCat = -1, kw = '', indF = '', eduF = '', view = 'co', limit = 200;
+
+/* 统计 */
+const catCount = new Array(CATS.length).fill(0);
+CO.forEach(c => c.j.forEach(j => catCount[j.c]++));
+const totalJob = catCount.reduce((a,b)=>a+b,0);
+const p3 = CO.reduce((a,c)=>a+c.j.filter(j=>j.p===3).length,0);
+const p2e = CO.reduce((a,c)=>a+c.j.filter(j=>j.p===2 && (j.c===4||j.c===5||j.c===6||j.c===7)).length,0);
+document.getElementById('s1').textContent = CO.length;
+document.getElementById('s2').textContent = totalJob;
+document.getElementById('s3').textContent = p3;
+document.getElementById('s4').textContent = p2e;
+document.getElementById('sub').textContent = `${CO.length} 家企业 · ${totalJob} 个岗位 · ${CATS.length} 个岗位类别`;
+
+/* 侧栏 */
+document.getElementById('cats').innerHTML =
+  `<button class="catbtn on" data-i="-1"><span class="dot" style="background:#cbd5e1"></span>全部类别<span class="c">${totalJob}</span></button>` +
+  CATS.map((n,i)=>`<button class="catbtn" data-i="${i}">
+      <span class="dot" style="background:${PDOT[D.pri[i]]}"></span>${n}
+      <span class="c">${catCount[i]}</span></button>`).join('');
+
+/* 行业下拉 */
+const inds = [...new Set(CO.map(c=>c.i))].sort();
+document.getElementById('ind').innerHTML = '<option value="">全部行业</option>' +
+  inds.map(i=>`<option value="${i}">${i}</option>`).join('');
+
+/* 过滤 */
+function catOf(j){ return j.c; }
+function matchJob(j){
+  if(curCat>=0 && j.c!==curCat) return false;
+  if(eduF && !(j.e||'').includes(eduF)) return false;
+  if(!kw) return true;
+  return (j.j+' '+j.m).toLowerCase().includes(kw);
+}
+function matchCo(c){
+  if(indF && c.i!==indF) return false;
+  if(!kw) return true;
+  if(c.n.toLowerCase().includes(kw)) return true;
+  return c.j.some(j=>matchJob(j));
+}
+
+/* 企业视图 */
+function renderCo(){
+  const list = CO.filter(matchCo);
+  let n = 0;
+  const html = list.map(c=>{
+    const j0 = c.j.filter(matchJob);
+    const js = j0.length ? j0 : c.j;
+    if(!j0.length && (curCat>=0 || eduF)) return '';
+    n++;
+    const show = js.slice(0,7);
+    const emp = c.e ? `<span class="tg emp">约 ${c.e} 人</span>` : `<span class="tg na">规模未披露</span>`;
+    const hire = c.h ? `<span class="tg">招聘 ${c.h} 人</span>` : '';
+    return `<div class="co" data-co="${n}">
+      <div class="hd">
+        <div class="nm">${c.n}</div>
+        <div class="tags"><span class="tg ind">${c.i}</span>${emp}${hire}
+          <span class="tg">${js.length} 个岗位</span></div>
+      </div>
+      <div class="intro">${c.d || '（简介未提供）'}</div>
+      <div class="jobs">${show.map(j=>`<span class="jb ${PCOL[j.p]}">${j.j}</span>`).join('')}
+        ${js.length>7?`<span class="jb p0">+${js.length-7}</span>`:''}</div>
+      ${js.length>7?`<span class="more" data-more="1">展开全部 ${js.length} 个岗位 ▾</span>`:''}
+      <div class="fold" style="display:none;margin-top:10px">
+        ${js.map(j=>`<div style="padding:7px 0;border-bottom:1px dashed #eef2f8">
+          <div style="font-size:12.8px;font-weight:600">${j.j} <span class="pill ${PCOL[j.p]}" style="margin-left:4px">${CATS[j.c]}</span></div>
+          <div class="tech" style="margin-top:3px">${techOf(j)}</div>
+          <div class="cm" style="margin-top:3px">${j.e||'学历不限'} · ${j.m||'专业不限'}${j.n?' · 招 '+j.n+' 人':''}</div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('viewCo').innerHTML = html || '<div class="empty">没有匹配的企业</div>';
+  document.getElementById('cnt').innerHTML = `命中 <b>${n}</b> 家企业 · <b>${list.reduce((a,c)=>a+c.j.filter(matchJob).length,0)}</b> 个岗位`;
+}
+
+/* 岗位视图 */
+function techOf(j){
+  const t = (j.v && VAR[j.v]) ? VAR[j.v] : TPL[CATS[j.c]];
+  return `<b>要求：</b>${t[0]}<br><b>技能：</b>${t[1].join(' · ')}`;
+}
+function renderJob(){
+  const rows = [];
+  CO.forEach(c=>{
+    if(indF && c.i!==indF) return;
+    c.j.forEach(j=>{
+      if(!matchJob(j)) return;
+      if(!kw || c.n.toLowerCase().includes(kw) || (j.j+' '+j.m).toLowerCase().includes(kw)) rows.push({c,j});
+    });
+  });
+  const shown = rows.slice(0, limit);
+  const html = shown.map(r=>`<tr>
+    <td><div class="cn">${r.c.n}</div></td>
+    <td><div class="jn">${r.j.j}</div></td>
+    <td><span class="pill ${PCOL[r.j.p]}">${CATS[r.j.c]}</span></td>
+    <td><div class="cm">${r.j.m||'不限'}</div></td>
+    <td><div class="cm" style="white-space:nowrap">${r.j.e||'不限'}</div></td>
+    <td><div class="cm">${r.j.n||'—'}</div></td>
+    <td><div class="tech">${techOf(r.j)}</div></td>
+  </tr>`).join('');
+  document.getElementById('viewJob').innerHTML = `<div class="tbl">
+    <table><thead><tr>
+      <th style="width:190px">企业</th><th style="width:170px">岗位</th>
+      <th style="width:132px">类别</th><th style="width:200px">专业要求</th>
+      <th style="width:94px">学历</th><th style="width:66px">人数</th><th>技术要求</th>
+    </tr></thead><tbody>${html}</tbody></table>
+    ${rows.length>limit?`<button class="loadmore" id="lm">还有 ${rows.length-limit} 条，点击加载更多</button>`:''}
+    ${rows.length?'':'<div class="empty">没有匹配的岗位</div>'}
+  </div>`;
+  document.getElementById('cnt').innerHTML = `命中 <b>${rows.length}</b> 个岗位${rows.length>limit?`（显示前 ${limit} 条）`:''}`;
+  const lm = document.getElementById('lm');
+  if(lm) lm.onclick = ()=>{ limit += 300; renderJob(); };
+}
+
+/* 事件 */
+document.getElementById('cats').addEventListener('click', e=>{
+  const b = e.target.closest('.catbtn'); if(!b) return;
+  document.querySelectorAll('.catbtn').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); curCat = +b.dataset.i; limit = 200; render();
+});
+document.getElementById('q').oninput = e=>{ kw = e.target.value.trim().toLowerCase(); limit=200; render(); };
+document.getElementById('ind').onchange = e=>{ indF = e.target.value; render(); };
+document.getElementById('edu').onchange = e=>{ eduF = e.target.value; render(); };
+document.querySelector('.seg').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  document.querySelectorAll('.seg button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); view = b.dataset.v; render();
+});
+document.getElementById('viewCo').addEventListener('click', e=>{
+  const m = e.target.closest('[data-more]');
+  if(m){ const fold = m.parentElement.querySelector('.fold');
+    const open = fold.style.display !== 'none';
+    fold.style.display = open ? 'none' : 'block';
+    m.textContent = open ? `展开全部 ▾` : `收起 ▴`; return; }
+  const intro = e.target.closest('.intro');
+  if(intro) intro.parentElement.classList.toggle('open');
+});
+
+function render(){
+  document.getElementById('viewCo').style.display = view==='co'?'block':'none';
+  document.getElementById('viewJob').style.display = view==='job'?'block':'none';
+  view==='co' ? renderCo() : renderJob();
+}
+render();
+(function(){
+  const u = new URLSearchParams(location.search);
+  const v = u.get('view'), c = u.get('cat');
+  if(c !== null && c !== ''){
+    curCat = +c;
+    document.querySelectorAll('.catbtn').forEach(b=>b.classList.toggle('on', b.dataset.i===c));
+  }
+  if(v === 'job' || v === 'co'){
+    view = v;
+    document.querySelectorAll('.seg button').forEach(b=>b.classList.toggle('on', b.dataset.v===v));
+  }
+  if(c !== null || v) render();
+})();
+</script>
+</body>
+</html>

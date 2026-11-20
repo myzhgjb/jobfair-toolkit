@@ -1,0 +1,17 @@
+{
+  "name": "11·11 校园苏州日 · 投递清单",
+  "short_name": "投递清单",
+  "description": "2026 校园苏州日苏州高校专场（苏州大学）投递打卡与路线指南",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f2f5f9",
+  "theme_color": "#0f3d63",
+  "lang": "zh-CN",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

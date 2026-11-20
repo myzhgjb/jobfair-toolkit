@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>投递进度清单 · {{EVENT_NAME}}</title>
+<!-- 投递进度清单模板（生成时删除本注释块）：
+  1. 替换 {{EVENT_NAME}} / {{CHECKLIST_SUBTITLE}} / {{GEN_DATE}}
+  2. 在 const SEED = [] 中按注释格式填入筛选出的企业岗位（已按 A→B→C 匹配度排序）
+  3. 功能：勾选划掉+时间戳 / 六档状态 / 备注 / 筛选 / 自增其他公司岗位 / 导出导入JSON / 重置 / 可打印
+  4. localStorage key 按场次改：const KEY = "jfs-<场次标识>"，避免不同招聘会数据混存 -->
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:"Microsoft YaHei","PingFang SC",sans-serif; background:#f4f6fa; color:#1f2733; line-height:1.6; }
+  .page { max-width:860px; margin:0 auto; padding:20px 14px 80px; }
+  header.hero { background:linear-gradient(135deg,#0f766e,#14b8a6); color:#fff; border-radius:14px; padding:22px 24px; margin-bottom:16px; }
+  header.hero h1 { font-size:21px; }
+  header.hero p { font-size:12.5px; opacity:.9; margin-top:4px; }
+  .prog { background:rgba(255,255,255,.16); border-radius:10px; padding:10px 14px; margin-top:12px; }
+  .prog .bar { height:10px; background:rgba(255,255,255,.25); border-radius:5px; overflow:hidden; }
+  .prog .bar i { display:block; height:100%; background:#fff; width:0; transition:width .3s; }
+  .prog .txt { font-size:12px; margin-top:5px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:4px; }
+  /* toolbar */
+  .toolbar { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; align-items:center; }
+  .chip { border:1px solid #cbd5e1; background:#fff; border-radius:20px; padding:4px 13px; font-size:12.5px; cursor:pointer; user-select:none; }
+  .chip.on { background:#0f766e; border-color:#0f766e; color:#fff; }
+  .chip .cnt { opacity:.75; font-size:11px; }
+  .tools { margin-left:auto; display:flex; gap:6px; flex-wrap:wrap; }
+  .btn { border:1px solid #cbd5e1; background:#fff; border-radius:8px; padding:5px 12px; font-size:12.5px; cursor:pointer; }
+  .btn:hover { background:#f1f5f9; }
+  .btn.primary { background:#0f766e; border-color:#0f766e; color:#fff; }
+  .btn.danger { color:#c22e22; border-color:#ecc7c2; }
+  /* rows */
+  ul.list { list-style:none; }
+  li.row { background:#fff; border-radius:12px; padding:12px 14px; margin-bottom:9px; box-shadow:0 1px 3px rgba(20,40,80,.06); display:flex; gap:11px; }
+  li.row .chk { flex:0 0 22px; margin-top:4px; width:19px; height:19px; accent-color:#0f766e; cursor:pointer; }
+  li.row .main { flex:1; min-width:0; }
+  li.row .t1 { display:flex; align-items:baseline; flex-wrap:wrap; gap:7px; }
+  li.row .t1 b { font-size:14.5px; }
+  .bdg { font-size:10.5px; border-radius:5px; padding:1px 7px; font-weight:700; }
+  .bA { background:#fde8e6; color:#c22e22; } .bB { background:#fdf0dc; color:#b3640a; } .bC { background:#eceff4; color:#5b6779; } .bX { background:#e6f4f1; color:#0f766e; }
+  .booth { font-size:11.5px; color:#1d4ed8; font-weight:800; }
+  .pos { font-size:12.5px; color:#39435a; margin-top:2px; }
+  .mail { font-size:12px; color:#0a7d5a; cursor:pointer; }
+  .mail:hover { text-decoration:underline; }
+  .nomail { font-size:12px; color:#98a2b3; }
+  li.row .ctl { flex:0 0 auto; display:flex; flex-direction:column; gap:5px; align-items:flex-end; }
+  select.st { border:1px solid #d7dee8; border-radius:7px; font-size:12px; padding:3px 5px; background:#fff; }
+  .del { border:none; background:none; color:#c2cbd8; cursor:pointer; font-size:15px; }
+  .del:hover { color:#c22e22; }
+  li.row.done { opacity:.55; }
+  li.row.done .t1 b, li.row.done .pos { text-decoration:line-through; }
+  .stamp { font-size:11px; color:#8a94a6; margin-top:3px; }
+  .note { width:100%; border:1px solid #e3e9f2; border-radius:7px; font-size:12px; padding:5px 8px; margin-top:7px; background:#fbfcfe; resize:vertical; min-height:26px; font-family:inherit; }
+  .note:focus { outline:1px solid #14b8a6; }
+  /* add form */
+  .addform { background:#fff; border:1.5px dashed #99cfc7; border-radius:12px; padding:13px 15px; margin:16px 0; }
+  .addform h3 { font-size:14px; color:#0f766e; margin-bottom:9px; }
+  .frow { display:flex; flex-wrap:wrap; gap:8px; }
+  .frow input, .frow select { border:1px solid #d7dee8; border-radius:8px; padding:7px 10px; font-size:13px; flex:1; min-width:120px; font-family:inherit; }
+  .frow input.w2 { flex:2; }
+  /* toast */
+  #toast { position:fixed; left:50%; bottom:34px; transform:translateX(-50%); background:#1f2733; color:#fff; border-radius:8px; padding:8px 18px; font-size:13px; opacity:0; pointer-events:none; transition:opacity .25s; z-index:9; }
+  #toast.show { opacity:.95; }
+  .hidden { display:none !important; }
+  footer { text-align:center; font-size:11.5px; color:#98a2b3; }
+  @media print {
+    body { background:#fff; } .toolbar,.addform,#toast,.del,select.st{display:none!important;}
+    li.row { box-shadow:none; border:1px solid #e3e9f2; break-inside:avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="hero">
+    <h1>✅ 投递进度清单 · {{EVENT_NAME}}</h1>
+    <p>{{CHECKLIST_SUBTITLE}}（按匹配度排序 ｜ 勾选即划掉并自动记录时间 ｜ 数据存 localStorage，换设备用「导出/导入」迁移）</p>
+    <div class="prog">
+      <div class="bar"><i id="pbar"></i></div>
+      <div class="txt"><span id="ptxt">—</span><span id="stxt">—</span></div>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <span class="chip on" data-f="all">全部 <span class="cnt" id="c-all"></span></span>
+    <span class="chip" data-f="A">A类 <span class="cnt" id="c-A"></span></span>
+    <span class="chip" data-f="B">B类 <span class="cnt" id="c-B"></span></span>
+    <span class="chip" data-f="C">C类 <span class="cnt" id="c-C"></span></span>
+    <span class="chip" data-f="X">自增 <span class="cnt" id="c-X"></span></span>
+    <span class="chip" data-f="undone">未完成 <span class="cnt" id="c-undone"></span></span>
+    <div class="tools">
+      <button class="btn primary" onclick="toggleAdd()">＋ 记录其他投递</button>
+      <button class="btn" onclick="exportData()">导出</button>
+      <button class="btn" onclick="document.getElementById('impfile').click()">导入</button>
+      <input type="file" id="impfile" accept=".json" class="hidden" onchange="importData(this)">
+      <button class="btn danger" onclick="resetAll()">重置</button>
+    </div>
+  </div>
+
+  <div class="addform hidden" id="addform">
+    <h3>＋ 新增投递记录（招聘会现场其他展位 / 网申 / 内推均可）</h3>
+    <div class="frow">
+      <input id="f-co" class="w2" placeholder="公司名称 *">
+      <input id="f-pos" class="w2" placeholder="岗位名称 *">
+      <input id="f-booth" style="max-width:90px" placeholder="展位号">
+      <input id="f-mail" placeholder="简历邮箱 / 投递渠道">
+      <select id="f-tier"><option value="X">自增</option><option value="A">A类</option><option value="B">B类</option><option value="C">C类</option></select>
+      <button class="btn primary" onclick="addItem()">保存</button>
+    </div>
+  </div>
+
+  <ul class="list" id="list"></ul>
+  <footer>勾选 = 已投递并划掉 ｜ 状态与备注自动保存 ｜ 点击邮箱可复制 ｜ {{GEN_DATE}}</footer>
+</div>
+<div id="toast"></div>
+
+<script>
+/* ===== 数据：按匹配度 A→B→C，同档内按投递动线顺序 ===== */
+const SEED = [
+ /* 填充说明（生成时删除本注释）：每条一条记录，格式：
+    {id:1, tier:"A", booth:"28", co:"公司名", pos:"岗位（可写多岗，⭐标重点）", mail:"邮箱，留空=现场投递"}
+    排序规则：tier A→B→C，同档内按匹配度/动线顺序；若留空数组，全部条目由页面「＋记录其他投递」手工添加 */
+];
+const STATUSES = ["待投递","已投递","已回音","面试中","Offer","不合适"];
+const KEY = "jfs-suke-2027-v1";
+let items = [], filter = "all";
+
+function load() {
+  try { items = JSON.parse(localStorage.getItem(KEY)) || null; } catch(e) { items = null; }
+  if (!items || !items.length) items = SEED.map(s => ({...s, status:"待投递", note:"", doneAt:null, custom:false}));
+  if (items.length < SEED.length) { /* 种子有更新时合并新条目 */
+    const have = new Set(items.map(i => i.id));
+    SEED.forEach(s => { if (!have.has(s.id)) items.push({...s, status:"待投递", note:"", doneAt:null, custom:false}); });
+  }
+  save();
+}
+function save() { localStorage.setItem(KEY, JSON.stringify(items)); }
+function toast(m) { const t = document.getElementById('toast'); t.textContent = m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 1400); }
+
+function render() {
+  const ul = document.getElementById('list');
+  const view = items.filter(i =>
+    filter === "all" ? true :
+    filter === "undone" ? i.status === "待投递" :
+    i.tier === filter
+  );
+  ul.innerHTML = view.map(i => `
+    <li class="row ${i.status!=='待投递'?'done':''}">
+      <input type="checkbox" class="chk" ${i.status!=='待投递'?'checked':''} onchange="toggle(${i.id}, this.checked)">
+      <div class="main">
+        <div class="t1">
+          <span class="bdg b${i.tier}">${i.tier==='X'?'自增':i.tier+'类'}</span>
+          ${i.booth?`<span class="booth">展位 ${i.booth}</span>`:''}
+          <b>${esc(i.co)}</b>
+        </div>
+        <div class="pos">${esc(i.pos)} ${i.mail?`· <span class="mail" onclick="copyMail('${esc(i.mail)}')">${esc(i.mail)}</span>`:'· <span class="nomail">现场投递</span>'}</div>
+        ${i.doneAt?`<div class="stamp">🕓 ${i.doneAt}</div>`:''}
+        <input class="note" placeholder="备注：HR称呼 / 面试时间 / 承诺反馈…" value="${esc(i.note||'')}" onchange="setNote(${i.id}, this.value)">
+      </div>
+      <div class="ctl">
+        <select class="st" onchange="setStatus(${i.id}, this.value)">
+          ${STATUSES.map(s=>`<option ${i.status===s?'selected':''}>${s}</option>`).join('')}
+        </select>
+        ${i.custom?`<button class="del" title="删除" onclick="delItem(${i.id})">✕</button>`:''}
+      </div>
+    </li>`).join('');
+  updateStats();
+}
+function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+
+function updateStats() {
+  const done = items.filter(i=>i.status!=='待投递').length;
+  const per = t => items.filter(i=>i.tier===t).length;
+  const undone = items.filter(i=>i.status==='待投递').length;
+  document.getElementById('pbar').style.width = (done/items.length*100||0)+'%';
+  document.getElementById('ptxt').textContent = `进度 ${done} / ${items.length}（${Math.round(done/items.length*100||0)}%）`;
+  const st = {}; STATUSES.forEach(s=>st[s]=0); items.forEach(i=>st[i.status]=(st[i.status]||0)+1);
+  document.getElementById('stxt').textContent = STATUSES.slice(1).map(s=>`${s} ${st[s]||0}`).join(' · ');
+  ['all','A','B','C','X'].forEach(f => {
+    const el = document.getElementById('c-'+f);
+    if (el) el.textContent = f==='all' ? items.length : per(f);
+  });
+  document.getElementById('c-undone').textContent = undone;
+}
+
+function toggle(id, on) {
+  const i = items.find(x=>x.id===id);
+  if (on) { if (i.status==='待投递') i.status='已投递'; if(!i.doneAt) i.doneAt = new Date().toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}); }
+  else { i.status='待投递'; i.doneAt=null; }
+  save(); render();
+}
+function setStatus(id, v) {
+  const i = items.find(x=>x.id===id); i.status=v;
+  if (v!=='待投递' && !i.doneAt) i.doneAt = new Date().toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+  if (v==='待投递') i.doneAt=null;
+  save(); render();
+}
+function setNote(id, v) { items.find(x=>x.id===id).note = v; save(); }
+function delItem(id) { if (!confirm('删除这条记录？')) return; items = items.filter(x=>x.id!==id); save(); render(); toast('已删除'); }
+
+function toggleAdd(){ document.getElementById('addform').classList.toggle('hidden'); }
+function addItem() {
+  const co = document.getElementById('f-co').value.trim();
+  const pos = document.getElementById('f-pos').value.trim();
+  if (!co || !pos) { toast('公司名称和岗位名称必填'); return; }
+  const maxId = Math.max(0, ...items.map(i=>i.id));
+  items.push({
+    id: maxId+1, tier: document.getElementById('f-tier').value,
+    booth: document.getElementById('f-booth').value.trim(),
+    co, pos, mail: document.getElementById('f-mail').value.trim(),
+    status:"待投递", note:"", doneAt:null, custom:true
+  });
+  ['f-co','f-pos','f-booth','f-mail'].forEach(k=>document.getElementById(k).value='');
+  save(); render(); toast('已添加');
+}
+function copyMail(m) {
+  (navigator.clipboard ? navigator.clipboard.writeText(m) : Promise.reject())
+    .then(()=>toast('已复制 '+m)).catch(()=>{ const i=document.createElement('input'); i.value=m; document.body.appendChild(i); i.select(); document.execCommand('copy'); i.remove(); toast('已复制 '+m); });
+}
+function exportData() {
+  const blob = new Blob([JSON.stringify(items, null, 1)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '投递进度备份-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click(); toast('已导出备份');
+}
+function importData(inp) {
+  const f = inp.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = e => { try {
+      const d = JSON.parse(e.target.result);
+      if (!Array.isArray(d) || !d.length) throw 0;
+      items = d; save(); render(); toast('导入成功');
+    } catch(_) { toast('文件格式不对'); } };
+  r.readAsText(f); inp.value='';
+}
+function resetAll() {
+  if (!confirm('重置为初始 27 家清单？所有勾选、备注和自增记录都会清空！（建议先导出备份）')) return;
+  localStorage.removeItem(KEY); load(); render(); toast('已重置');
+}
+document.querySelectorAll('.chip[data-f]').forEach(c => c.onclick = () => {
+  document.querySelectorAll('.chip[data-f]').forEach(x=>x.classList.remove('on'));
+  c.classList.add('on'); filter = c.dataset.f; render();
+});
+load(); render();
+</script>
+</body>
+</html>

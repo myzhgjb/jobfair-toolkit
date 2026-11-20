@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<meta name="theme-color" content="#0f3d63">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<title>11·11 投递清单</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  :root{
+    --bg:#f2f5f9;--card:#fff;--line:#e4eaf2;--ink:#111c2e;--ink2:#4a5a70;--ink3:#8b98ab;
+    --blue:#0f3d63;--blue2:#1d6fa5;--teal:#0e7c66;--amber:#b45309;
+    --safe-b:env(safe-area-inset-bottom,0px);
+  }
+  html,body{height:100%;overflow-x:hidden}
+  body{
+    background:var(--bg);color:var(--ink);font-size:15px;line-height:1.6;
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:calc(64px + var(--safe-b));
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:0 12px}
+
+  /* ---------- header ---------- */
+  header{
+    background:linear-gradient(160deg,#0f3d63 0%,#1a5a86 55%,#1d6fa5 100%);
+    color:#fff;padding:calc(16px + env(safe-area-inset-top,0px)) 0 16px;
+    position:sticky;top:0;z-index:20;box-shadow:0 2px 12px rgba(15,61,99,.18)
+  }
+  .hd{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+  h1{font-size:17.5px;font-weight:700;line-height:1.35}
+  .hd .sub{font-size:11.5px;opacity:.82;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .hd .date{font-size:11px;background:rgba(255,255,255,.16);padding:4px 9px;border-radius:99px;white-space:nowrap}
+  .pgbar{margin-top:12px;height:7px;background:rgba(255,255,255,.2);border-radius:99px;overflow:hidden}
+  .pgbar i{display:block;height:100%;width:0;background:#5eead4;border-radius:99px;transition:width .35s ease}
+  .pgtxt{display:flex;justify-content:space-between;font-size:11.5px;opacity:.9;margin-top:5px}
+  .pgtxt b{font-size:13px}
+
+  /* ---------- tabs ---------- */
+  .tabs{display:flex;gap:6px;margin:12px 0 0;background:rgba(255,255,255,.12);padding:4px;border-radius:11px}
+  .tab{flex:1;min-width:0;text-align:center;padding:7px 2px;font-size:12.5px;border-radius:8px;cursor:pointer;
+    color:rgba(255,255,255,.82);transition:.15s;user-select:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tab.on{background:#fff;color:var(--blue);font-weight:700}
+
+  /* ---------- toolbar ---------- */
+  .bar{position:sticky;top:0;z-index:15;background:var(--bg);padding:10px 0 8px}
+  .chips{display:flex;gap:7px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{flex:0 0 auto;border:1px solid #d5deea;background:#fff;color:var(--ink2);font-size:12.5px;
+    padding:6px 12px;border-radius:99px;white-space:nowrap;cursor:pointer;font-family:inherit}
+  .chip.on{background:var(--blue);border-color:var(--blue);color:#fff;font-weight:600}
+  .chip .c{opacity:.72;margin-left:3px;font-size:11.5px}
+  .sbox{margin-top:8px;position:relative}
+  .sbox input{width:100%;border:1px solid #d5deea;background:#fff;border-radius:10px;
+    padding:9px 12px 9px 34px;font-size:14px;outline:none;font-family:inherit;color:var(--ink)}
+  .sbox input:focus{border-color:var(--blue2)}
+  .sbox::before{content:"🔍";position:absolute;left:11px;top:8px;font-size:13px;opacity:.55}
+
+  /* ---------- list ---------- */
+  .row{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:12px;
+    margin-bottom:9px;display:flex;gap:11px;transition:.18s}
+  .row.done{background:#f0fbf7;border-color:#b6e8d8}
+  .tick{flex:0 0 26px;height:26px;border-radius:50%;border:2px solid #cfd9e6;background:#fff;
+    cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:1px;
+    font-size:14px;color:transparent;transition:.15s;user-select:none}
+  .row.done .tick{background:var(--teal);border-color:var(--teal);color:#fff}
+  .main{flex:1;min-width:0}
+  .nm{font-size:14.5px;font-weight:650;line-height:1.45;word-break:break-word}
+  .row.done .nm{color:#0b5c4c}
+  .meta{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px;align-items:center}
+  .tg{font-size:10.5px;padding:1.5px 7px;border-radius:5px;background:#eef3f9;color:#5a6b82;font-weight:600}
+  .tg.ind{background:#f0f4fa;color:#4a5f7a}
+  .tg.s5{background:#dbeafe;color:#1e40af}
+  .tg.s4{background:#e0f2fe;color:#0369a1}
+  .tg.s3{background:#f1f5f9;color:#64748b}
+  .tg.hot{background:#fef3c7;color:#92400e}
+  .jobs{margin-top:7px;display:flex;flex-wrap:wrap;gap:5px}
+  .jb{font-size:11.8px;padding:2px 8px;border-radius:6px;background:#f4f7fb;color:#3f5169;
+    border:1px solid #e8eef6;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .jb.s{border:1px solid #bfdbfe;background:#eff6ff;color:#1d4ed8;font-weight:600}
+  .more{font-size:11.5px;color:var(--ink3);margin-top:6px}
+  .stamp{font-size:11px;color:var(--teal);margin-top:5px;font-weight:600}
+  .fold{display:none;margin-top:9px;padding-top:9px;border-top:1px dashed #e0e7f0}
+  .row.open .fold{display:block}
+  .fold .lbl{font-size:11px;color:var(--ink3);margin:6px 0 2px}
+  .fold .tx{font-size:12.3px;color:var(--ink2);line-height:1.65}
+  .fold .jd{padding:6px 0;border-bottom:1px dashed #eef2f8;font-size:12.5px}
+  .fold .jd:last-child{border-bottom:none}
+  .fold .jd b{font-weight:600;color:var(--ink)}
+  .fold .jd span{display:block;color:var(--ink3);font-size:11.5px;margin-top:2px}
+
+  /* ---------- guide ---------- */
+  .card{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:15px;margin-bottom:11px}
+  .card h3{font-size:14.5px;margin-bottom:9px;display:flex;align-items:center;gap:7px}
+  .card h3::before{content:"";width:3px;height:14px;border-radius:2px;background:var(--blue2)}
+  .tl{position:relative;padding-left:18px}
+  .tl::before{content:"";position:absolute;left:5px;top:5px;bottom:5px;width:2px;background:#e2e9f2}
+  .tl .it{position:relative;padding:0 0 13px}
+  .tl .it:last-child{padding-bottom:0}
+  .tl .it::before{content:"";position:absolute;left:-17px;top:5px;width:9px;height:9px;border-radius:50%;
+    background:#fff;border:2.5px solid var(--blue2)}
+  .tl .t{font-size:12px;color:var(--blue2);font-weight:700;letter-spacing:.02em}
+  .tl .n{font-size:13.8px;font-weight:600;margin-top:1px}
+  .tl .l{font-size:12.2px;color:var(--ink3);margin-top:1px}
+  .kv{display:flex;gap:9px;padding:7px 0;border-bottom:1px dashed #eef2f8;font-size:13px}
+  .kv:last-child{border-bottom:none}
+  .kv b{flex:0 0 62px;color:var(--ink3);font-size:12.3px;font-weight:500}
+  .kv span{flex:1;color:var(--ink2)}
+  ul.dot{list-style:none;font-size:13px;color:var(--ink2)}
+  ul.dot li{padding-left:15px;position:relative;margin:6px 0}
+  ul.dot li::before{content:"";position:absolute;left:0;top:9px;width:5px;height:5px;border-radius:50%;background:#c3d0e2}
+  .warn{background:#fffbeb;border:1px solid #fde68a;border-radius:11px;padding:11px 13px;
+    font-size:12.5px;color:#78350f;line-height:1.7}
+  .zone{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed #eef2f8;font-size:13px}
+  .zone:last-child{border-bottom:none}
+  .zone b{color:var(--ink)}
+  .zone span{color:var(--ink3);font-size:12px}
+
+  /* ---------- bottom nav ---------- */
+  nav{position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgba(255,255,255,.97);
+    border-top:1px solid var(--line);backdrop-filter:blur(10px);
+    padding:6px 0 calc(6px + var(--safe-b));display:flex}
+  nav .n{flex:1;min-width:0;text-align:center;font-size:10.5px;color:var(--ink3);padding:4px 0;cursor:pointer;white-space:nowrap}
+  nav .n .ic{font-size:18px;display:block;line-height:1.35}
+  nav .n.on{color:var(--blue2);font-weight:700}
+
+  /* ---------- sheet ---------- */
+  .mask{position:fixed;inset:0;background:rgba(10,20,35,.42);z-index:40;display:none}
+  .mask.on{display:block}
+  .sheet{position:fixed;left:0;right:0;bottom:0;z-index:41;background:#fff;
+    border-radius:18px 18px 0 0;padding:18px 16px calc(18px + var(--safe-b));
+    transform:translateY(110%);transition:transform .26s ease;max-height:82vh;overflow:auto}
+  .sheet.on{transform:translateY(0)}
+  .sheet h4{font-size:15px;margin-bottom:10px}
+  .btns{display:grid;gap:9px;margin-top:6px}
+  .btn{border:none;border-radius:11px;padding:13px;font-size:14.5px;font-weight:650;font-family:inherit;
+    background:#eef3f9;color:var(--ink);cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center}
+  .btn.primary{background:var(--blue);color:#fff}
+  .btn small{font-weight:400;font-size:11.5px;opacity:.7}
+  .prev{margin-top:12px;background:#f7fafd;border:1px solid #e6edf6;border-radius:10px;padding:11px;
+    font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:#3f5169;
+    white-space:pre-wrap;max-height:190px;overflow:auto;line-height:1.6}
+  .toast{position:fixed;left:50%;bottom:96px;transform:translate(-50%,20px);z-index:60;
+    background:rgba(17,28,46,.92);color:#fff;font-size:13px;padding:9px 16px;border-radius:99px;
+    opacity:0;transition:.22s;pointer-events:none}
+  .toast.on{opacity:1;transform:translate(-50%,0)}
+  .hide{display:none!important}
+  @media(min-width:780px){ body{font-size:15px} .wrap{padding:0 16px} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="hd">
+      <div>
+        <h1>11·11 校园苏州日 · 投递清单</h1>
+        <div class="sub">苏大独墅湖校区文体中心体育馆 · 308 家企业</div>
+      </div>
+      <div class="date">11月11日</div>
+    </div>
+    <div class="pgbar"><i id="pgI"></i></div>
+    <div class="pgtxt"><span>目标企业已投 <b id="pgN">0</b> / <b id="pgT">0</b></span><span id="pgP">0%</span></div>
+    <div class="tabs">
+      <div class="tab on" data-v="t">我的目标</div>
+      <div class="tab" data-v="a">全部 308 家</div>
+      <div class="tab" data-v="g">现场指南</div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="viewList">
+    <div class="bar">
+      <div class="chips" id="chips">
+        <button class="chip on" data-f="0">目标全部<span class="c" id="cAll"></span></button>
+        <button class="chip" data-f="5">强相关<span class="c" id="c5"></span></button>
+        <button class="chip" data-f="4">软件开发<span class="c" id="c4"></span></button>
+        <button class="chip" data-f="3">相关<span class="c" id="c3"></span></button>
+        <button class="chip" data-f="d">已投<span class="c" id="cD"></span></button>
+      </div>
+      <div class="sbox"><input id="q" type="text" placeholder="搜企业 / 岗位，如「后端」「半导体」"></div>
+    </div>
+    <div id="list"></div>
+    <div id="empty" class="hide" style="text-align:center;color:#8b98ab;font-size:13px;padding:40px 0">没有匹配的企业</div>
+  </div>
+
+  <div id="viewGuide" class="hide">
+    <div class="card">
+      <h3>今天怎么走</h3>
+      <div class="tl">
+        <div class="it"><div class="t">13:40</div><div class="n">进校 · 南区东门（松涛街）</div><div class="l">凭学生证入校，别带饮料食物</div></div>
+        <div class="it"><div class="t">14:00–14:35</div><div class="n">苏州创新创业环境推介会</div><div class="l">文体中心南侧负一楼多功能厅（D08）· 有抽奖</div></div>
+        <div class="it"><div class="t">14:40–17:30</div><div class="n">高层次人才招聘会（主场）</div><div class="l">文体中心体育馆 · 300+ 企业 · 你只需要这 3 小时</div></div>
+        <div class="it"><div class="t">14:45–17:00</div><div class="n">百校千企产学研对接会</div><div class="l">文体中心一楼会议室四（跟你关系不大）</div></div>
+        <div class="it"><div class="t">14:00–17:30</div><div class="n">青春市集</div><div class="l">文体中心西侧 · 苏博文创、集章换礼、园林门票</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>交通与入场</h3>
+      <div class="kv"><b>地铁</b><span>8 号线「仁爱路」站 → 步行至独墅湖校区南区东门</span></div>
+      <div class="kv"><b>公交</b><span>143 / 146 / 1021 路「中科大·苏大独墅湖校区」站</span></div>
+      <div class="kv"><b>打车</b><span>定位「苏州大学独墅湖校区南区东门」，别定北门</span></div>
+      <div class="kv"><b>证件</b><span>2027 届凭学生证；往届凭毕业证</span></div>
+      <div class="kv"><b>提示</b><span>现场不提供停车位，建议公共交通</span></div>
+    </div>
+
+    <div class="card">
+      <h3>场馆分区与走位建议</h3>
+      <p style="font-size:12.5px;color:#8b98ab;margin-bottom:8px;line-height:1.7">
+        官方未公开带展位号的平面图（现场以 FlashOffer 扫码页为准）。下面是按参会企业行业统计出的分区体量，进馆后按这个顺序走，少绕路。
+      </p>
+      <div id="zones"></div>
+      <div class="warn" style="margin-top:11px">
+        <b>走位顺序：</b>进门先拿一张现场导览图确认展位号 → 直奔「软件/互联网」和「半导体」两个片区（你的 4 个强相关 + 大部分软件开发岗都在这）→ 再扫「高端装备/机器人」里的软件岗 → 最后逛政策区和市集。
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>带什么</h3>
+      <ul class="dot">
+        <li>简历 <b>15 份</b>（技术岗 10 份 + 备选 5 份），别带一摞</li>
+        <li>学生证、身份证</li>
+        <li>手机提前打开这个页面，勾选比记笔记快</li>
+        <li>充电宝 —— 现场扫码投递很耗电</li>
+        <li>一个文件袋，装企业宣传单和收的名片</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>现场三个隐藏buff</h3>
+      <ul class="dot">
+        <li><b>职通面试间</b>：部分企业现场面试、offer 直发，看到就排队</li>
+        <li><b>FlashOffer 扫码投递</b>：扫一次码就能批量投，投完记得回来打勾</li>
+        <li><b>政策咨询区</b>：苏惠青年卡、人才公寓、面试补贴，顺手领</li>
+      </ul>
+    </div>
+  </div>
+</main>
+
+<nav>
+  <div class="n on" data-v="t"><span class="ic">🎯</span>我的目标</div>
+  <div class="n" data-v="a"><span class="ic">🏢</span>全部企业</div>
+  <div class="n" data-v="g"><span class="ic">🗺️</span>现场指南</div>
+  <div class="n" id="navExport"><span class="ic">📤</span>导出</div>
+</nav>
+
+<div class="mask" id="mask"></div>
+<div class="sheet" id="sheet">
+  <h4>导出投递记录</h4>
+  <div class="btns">
+    <button class="btn primary" id="btnCopy">复制成文字 <small>直接粘给我</small></button>
+    <button class="btn" id="btnMd">下载 Markdown 文件 <small>.md</small></button>
+    <button class="btn" id="btnJson">下载 JSON 备份 <small>换手机可恢复</small></button>
+    <button class="btn" id="btnReset" style="color:#b91c1c">清空全部记录 <small>不可撤销</small></button>
+  </div>
+  <div class="prev" id="prev"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script id="DATA" type="application/json">__DATA__</script>
+<script>
+const CO = JSON.parse(document.getElementById('DATA').textContent).c;
+const KEY = 'szd1111.apply.v1';
+let DB = JSON.parse(localStorage.getItem(KEY) || '{}');
+const save = () => localStorage.setItem(KEY, JSON.stringify(DB));
+
+const TARGET = CO.filter(c => c.b >= 3).sort((a,b)=> b.b-a.b || a.n.localeCompare(b.n,'zh'));
+const ALL = CO.slice().sort((a,b)=> a.n.localeCompare(b.n,'zh'));
+let view='t', filter='0', kw='', openSet=new Set();
+
+/* ---- 统计 ---- */
+const S = {5:0,4:0,3:0};
+TARGET.forEach(c=>{ S[c.b]++; });
+document.getElementById('pgT').textContent = TARGET.length;
+document.getElementById('cAll').textContent = TARGET.length;
+document.getElementById('c5').textContent = S[5];
+document.getElementById('c4').textContent = S[4];
+document.getElementById('c3').textContent = S[3];
+
+function doneN(){ return TARGET.filter(c=>DB[c.n]).length; }
+function paintProgress(){
+  const n = doneN(), t = TARGET.length, p = t? Math.round(n/t*100):0;
+  document.getElementById('pgI').style.width = p+'%';
+  document.getElementById('pgN').textContent = n;
+  document.getElementById('pgP').textContent = p+'%';
+  document.getElementById('cD').textContent = n;
+}
+
+/* ---- 渲染列表 ---- */
+const SC = {5:['强相关','s5'],4:['软件开发','s4'],3:['相关','s3']};
+function render(){
+  const src = view==='a' ? ALL : TARGET;
+  const arr = src.filter(c=>{
+    if(view==='t'){
+      if(filter==='d' && !DB[c.n]) return false;
+      if(filter!=='0' && filter!=='d' && c.b!==+filter) return false;
+    }
+    if(!kw) return true;
+    const s = (c.n+' '+c.i+' '+c.j.map(x=>x.j).join(' ')).toLowerCase();
+    return s.includes(kw);
+  });
+  document.getElementById('empty').classList.toggle('hide', arr.length>0);
+  const box = document.getElementById('list');
+  box.innerHTML = arr.map(c=>{
+    const hit = c.j.filter(j=>j.s);
+    const show = hit.length? hit : c.j;
+    const d = DB[c.n];
+    const st = d? (d.st||'') : '';
+    const chips = show.slice(0,4).map(j=>
+      `<span class="jb${j.s?' s':''}">${esc(j.j)}</span>`).join('');
+    const more = show.length>4? `<span class="jb">+${show.length-4}</span>`:'';
+    const badge = c.b? `<span class="tg ${SC[c.b][1]}">${SC[c.b][0]}</span>`:'';
+    return `<div class="row${d?' done':''}${openSet.has(c.n)?' open':''}" data-n="${esc(c.n)}">
+      <div class="tick" data-tick="1">✓</div>
+      <div class="main">
+        <div class="nm">${esc(c.n)}</div>
+        <div class="meta">${badge}<span class="tg">${esc(c.i)}</span>
+          ${hit.length?`<span class="tg hot">${hit.length} 个对口岗</span>`:`<span class="tg">${c.j.length} 个岗位</span>`}
+          ${c.hire?`<span class="tg">约 ${c.hire} 人</span>`:''}</div>
+        <div class="jobs">${chips}${more}</div>
+        ${d?`<div class="stamp">✓ 已投 ${st}</div>`:''}
+        <div class="more">${openSet.has(c.n)?'收起 ▴':'展开全部岗位 ▾'}</div>
+        <div class="fold">
+          ${c.d?`<div class="lbl">企业简介</div><div class="tx">${esc(c.d)}…</div>`:''}
+          <div class="lbl">在招岗位（${c.j.length}）</div>
+          ${c.j.map(j=>`<div class="jd"><b>${esc(j.j)}</b>
+            <span>${esc(j.e||'学历不限')}${j.m?' · '+esc(j.m):''}${j.c?' · 招 '+esc(j.c)+' 人':''}${j.s?' · 对口':''}</span></div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  paintProgress();
+}
+function esc(s){ return String(s||'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
+
+/* ---- 交互 ---- */
+document.getElementById('list').addEventListener('click', e=>{
+  const tick = e.target.closest('[data-tick]');
+  const row = e.target.closest('.row'); if(!row) return;
+  const name = row.dataset.n;
+  if(tick){
+    if(DB[name]) delete DB[name];
+    else {
+      const d = new Date();
+      DB[name] = {st: `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`, ts: Date.now()};
+    }
+    save(); render();
+    if(DB[name] && navigator.vibrate) navigator.vibrate(12);
+    return;
+  }
+  if(openSet.has(name)) openSet.delete(name); else openSet.add(name);
+  render();
+});
+document.getElementById('chips').addEventListener('click', e=>{
+  const b = e.target.closest('.chip'); if(!b) return;
+  document.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); filter=b.dataset.f; render();
+});
+document.getElementById('q').addEventListener('input', e=>{ kw=e.target.value.trim().toLowerCase(); render(); });
+
+function setView(v){
+  view=v;
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on', x.dataset.v===v));
+  document.querySelectorAll('nav .n').forEach(x=>x.classList.toggle('on', x.dataset.v===v));
+  document.getElementById('viewList').classList.toggle('hide', v==='g');
+  document.getElementById('viewGuide').classList.toggle('hide', v!=='g');
+  if(v!=='g') render();
+  window.scrollTo({top:0,behavior:'instant'});
+}
+document.querySelectorAll('.tab').forEach(x=>x.onclick=()=>setView(x.dataset.v));
+document.querySelectorAll('nav .n[data-v]').forEach(x=>x.onclick=()=>setView(x.dataset.v));
+
+/* ---- 分区统计 ---- */
+(function(){
+  const m = {};
+  CO.forEach(c=> m[c.i]=(m[c.i]||0)+1);
+  const order = Object.entries(m).sort((a,b)=>b[1]-a[1]);
+  const best = {};
+  CO.filter(c=>c.b).forEach(c=>{ best[c.i]=(best[c.i]||0)+1; });
+  document.getElementById('zones').innerHTML = order.map(([k,v])=>
+    `<div class="zone"><b>${k}</b><span>${v} 家${best[k]?` · <b style="color:#b45309">${best[k]} 家对口</b>`:''}</span></div>`
+  ).join('');
+})();
+
+/* ---- 导出 ---- */
+const mask=document.getElementById('mask'), sheet=document.getElementById('sheet');
+function openSheet(){ mask.classList.add('on'); sheet.classList.add('on'); document.getElementById('prev').textContent = buildMd(); }
+function closeSheet(){ mask.classList.remove('on'); sheet.classList.remove('on'); }
+mask.onclick=closeSheet;
+document.getElementById('navExport').onclick=openSheet;
+
+function buildMd(){
+  const done = TARGET.filter(c=>DB[c.n]).sort((a,b)=>{
+    const ta=DB[a.n].ts||0, tb=DB[b.n].ts||0; return ta-tb;
+  });
+  const not = TARGET.filter(c=>!DB[c.n]);
+  const d = new Date();
+  let s = `# 校园苏州日 11·11 投递记录\n\n`;
+  s += `- 场次：2026 校园苏州日全国秋招 · 苏州高校专场（苏大独墅湖校区文体中心体育馆）\n`;
+  s += `- 导出时间：${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}\n`;
+  s += `- 进度：${done.length} / ${TARGET.length} 家目标企业\n\n`;
+  if(done.length){
+    s += `## 已投（${done.length}）\n\n| 企业 | 对口岗位 | 投递时间 |\n|---|---|---|\n`;
+    done.forEach(c=>{
+      const hit=c.j.filter(j=>j.s).map(j=>j.j).slice(0,3).join('、')||'—';
+      s += `| ${c.n} | ${hit} | ${DB[c.n].st||''} |\n`;
+    });
+  } else s += `## 已投（0）\n\n还没有勾选。\n`;
+  if(not.length){
+    s += `\n## 还没投（${not.length}）\n\n`;
+    not.slice(0,40).forEach(c=>{ s += `- ${c.n}\n`; });
+    if(not.length>40) s += `- …… 还有 ${not.length-40} 家\n`;
+  }
+  return s;
+}
+function toast(t){ const el=document.getElementById('toast'); el.textContent=t; el.classList.add('on');
+  clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('on'),1600); }
+function dl(name, text, type='text/plain'){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([text],{type:type+';charset=utf-8'}));
+  a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+}
+document.getElementById('btnCopy').onclick=async()=>{
+  const t=buildMd();
+  try{ await navigator.clipboard.writeText(t); toast('已复制，去粘给我'); }
+  catch(e){ const ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy'); ta.remove(); toast('已复制'); }
+};
+document.getElementById('btnMd').onclick=()=>{ dl('投递记录.md', buildMd()); toast('已下载'); };
+document.getElementById('btnJson').onclick=()=>{ dl('投递记录.json', JSON.stringify(DB,null,2), 'application/json'); toast('已备份'); };
+document.getElementById('btnReset').onclick=()=>{
+  if(confirm('确定清空全部投递记录？')){
+    DB={}; save(); render(); document.getElementById('prev').textContent=buildMd(); toast('已清空');
+  }
+};
+
+/* ---- PWA ---- */
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+
+render();
+if(location.hash==='#guide') setView('g');
+</script>
+</body>
+</html>

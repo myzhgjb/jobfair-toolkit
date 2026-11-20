@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{EVENT_NAME}} · 岗位筛选与优先级投递路线</title>
+<!--
+  使用说明（生成时删除本注释块）：
+  - 替换全部 {{PLACEHOLDER}} 占位符
+  - {{MAP_SVG}} 处手绘 SVG 场馆图：象限色块+展位范围+通道+出入口+展位圆圈+虚线路径
+    （圆圈 r=13，粉区窄行用 r=10.5；A=#d93025 B=#ef8a17 C=#6b7686；路径 stroke #2563eb dashed）
+  - 三个表格按投递顺序填行；无邮箱填 <td class="nomail">现场投递</td>
+  - CSS 勿改，保证手机可读与打印样式
+-->
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:"Microsoft YaHei","PingFang SC","Segoe UI",sans-serif; background:#f4f6fa; color:#1f2733; line-height:1.65; }
+  .page { max-width:1080px; margin:0 auto; padding:28px 20px 60px; }
+  .hero { background:linear-gradient(135deg,#1d4ed8,#3b82f6); color:#fff; border-radius:16px; padding:30px 34px; margin-bottom:22px; }
+  .hero h1 { font-size:26px; letter-spacing:.5px; margin-bottom:8px; }
+  .hero p.sub { font-size:14px; opacity:.92; }
+  .stats { display:flex; flex-wrap:wrap; gap:14px; margin-top:18px; }
+  .stat { background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.25); border-radius:12px; padding:10px 18px; min-width:130px; }
+  .stat b { display:block; font-size:24px; }
+  .stat span { font-size:12px; opacity:.85; }
+  section { background:#fff; border-radius:14px; padding:24px 28px; margin-bottom:22px; box-shadow:0 1px 4px rgba(20,40,80,.07); }
+  h2 { font-size:19px; margin-bottom:6px; display:flex; align-items:center; gap:8px; }
+  h2 .no { background:#1d4ed8; color:#fff; border-radius:8px; font-size:13px; padding:2px 9px; }
+  .desc { font-size:13px; color:#5b6779; margin-bottom:14px; }
+  .mapwrap { background:#fbfcfe; border:1px solid #e3e9f2; border-radius:12px; padding:10px; }
+  svg { width:100%; height:auto; display:block; }
+  .legend { display:flex; flex-wrap:wrap; gap:16px; font-size:12.5px; color:#39435a; margin-top:12px; padding:10px 12px; background:#f6f8fc; border-radius:10px; }
+  .legend span.item { display:inline-flex; align-items:center; gap:6px; }
+  .dot { width:13px; height:13px; border-radius:50%; display:inline-block; }
+  .sw { width:14px; height:14px; border-radius:3px; display:inline-block; border:1px solid rgba(0,0,0,.12); }
+  .steps { counter-reset:step; }
+  .step { display:flex; gap:14px; padding:13px 0; border-bottom:1px dashed #e5eaf3; }
+  .step:last-child { border-bottom:none; }
+  .step .idx { flex:0 0 34px; height:34px; border-radius:50%; background:#1d4ed8; color:#fff; font-weight:700; display:flex; align-items:center; justify-content:center; font-size:15px; }
+  .step .body { flex:1; }
+  .step .body b { font-size:15px; }
+  .step .body .meta { font-size:12.5px; color:#5b6779; margin-top:2px; }
+  .tag { display:inline-block; font-size:11px; border-radius:5px; padding:1px 7px; margin-left:6px; vertical-align:1px; font-weight:600; }
+  .tagA { background:#fde8e6; color:#c22e22; }
+  .tagB { background:#fdf0dc; color:#b3640a; }
+  .tagC { background:#eceff4; color:#5b6779; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th { background:#eef2f9; text-align:left; padding:9px 10px; font-size:12.5px; color:#39435a; border-bottom:2px solid #dbe3ef; white-space:nowrap; }
+  td { padding:9px 10px; border-bottom:1px solid #edf1f7; vertical-align:top; }
+  tr:hover td { background:#f7f9fd; }
+  .booth { font-weight:800; color:#1d4ed8; white-space:nowrap; }
+  .co { font-weight:700; }
+  .mail { font-size:12px; color:#0a7d5a; word-break:break-all; }
+  .nomail { font-size:12px; color:#98a2b3; }
+  .poslist { margin:0; padding-left:0; list-style:none; }
+  .poslist li { margin-bottom:3px; }
+  .req { font-size:12.5px; color:#39435a; }
+  .note { font-size:12px; color:#8a5a00; background:#fff8e6; border:1px solid #f3e2ae; border-radius:8px; padding:8px 12px; margin-top:10px; }
+  .tips { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:14px; }
+  .tip { background:#f6f8fc; border-left:4px solid #1d4ed8; border-radius:8px; padding:12px 16px; font-size:13px; }
+  .tip b { display:block; margin-bottom:3px; font-size:13.5px; }
+  .footer { text-align:center; font-size:12px; color:#98a2b3; margin-top:10px; }
+  @media print {
+    body { background:#fff; }
+    .page { max-width:100%; padding:0; }
+    section, .hero { box-shadow:none; break-inside:avoid; }
+    .hero { background:#1d4ed8 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="hero">
+    <h1>🎯 {{EVENT_NAME}} · {{TARGET_DIRECTION}}岗位筛选 &amp; 优先级投递路线</h1>
+    <p class="sub">{{DATA_SOURCE_NOTE}}</p>
+    <div class="stats">
+      <div class="stat"><b>{{N_COMPANIES}}</b><span>参会企业</span></div>
+      <div class="stat"><b>{{N_JOBS}}</b><span>发布岗位条目</span></div>
+      <div class="stat"><b>{{N_SELECTED}}</b><span>{{TARGET_DIRECTION}}相关企业（筛出）</span></div>
+      <div class="stat"><b>{{N_POSITIONS}}</b><span>可投岗位</span></div>
+      <div class="stat"><b>{{N_A}} / {{N_B}} / {{N_C}}</b><span>A / B / C 类企业数</span></div>
+    </div>
+  </div>
+
+  <section>
+    <h2><span class="no">1</span>场馆平面与投递路线图（按 {{MAP_SOURCE}} 重绘）</h2>
+    <p class="desc">主入口在场地<b>{{ENTRANCE_POS}}</b>，主出口在<b>{{EXIT_POS}}</b>；蓝色为通道。圆圈内数字 = <b>展位号</b>，颜色代表优先级；虚线箭头为推荐动线，全程不走回头路。</p>
+    <div class="mapwrap">
+      {{MAP_SVG}}
+    </div>
+    <div class="legend">
+      <span class="item"><span class="dot" style="background:#d93025"></span><b>A类</b> 核心岗位 · 第一优先（{{N_A}}家）</span>
+      <span class="item"><span class="dot" style="background:#ef8a17"></span><b>B类</b> 强相关 · 第二优先（{{N_B}}家）</span>
+      <span class="item"><span class="dot" style="background:#6b7686"></span><b>C类</b> 周边兜底 · 第三优先（{{N_C}}家）</span>
+      <!-- 专区配色图例按本次海报追加 -->
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="no">2</span>推荐动线：{{N_SEGMENTS}} 段走完 {{N_SELECTED}} 家，全程不折返</h2>
+    <p class="desc">从<b>{{ENTRANCE_POS}}</b>进 → 按象限顺序扫场 → 从<b>{{EXIT_POS}}</b>出。预计全程 {{TIME_ESTIMATE}}（含每展位 5–8 分钟交流）。</p>
+    <div class="steps">
+      <!-- 每段一个 .step：idx=段号，body 内 b=区域与展位范围，meta=该段展位顺序与企业一句话摘要 -->
+      {{ROUTE_STEPS}}
+    </div>
+    <div class="note">⏱ 时间紧的取舍：只投 <b>A类{{N_A}}家</b>（红色编号）约需 {{TIME_A_ONLY}}；B类视精力穿插；C类作为兜底。</div>
+  </section>
+
+  <section>
+    <h2><span class="no">3</span>A类 · 第一优先：{{TIER_A_TITLE}}（{{N_A}}家）</h2>
+    <p class="desc">{{TIER_A_DESC}}</p>
+    <table>
+      <thead><tr><th>顺序</th><th>展位</th><th>企业</th><th>可投岗位</th><th>专业 / 技能要求</th><th>简历邮箱</th></tr></thead>
+      <tbody>{{TABLE_A}}</tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2><span class="no">4</span>B类 · 第二优先：{{TIER_B_TITLE}}（{{N_B}}家）</h2>
+    <p class="desc">{{TIER_B_DESC}}</p>
+    <table>
+      <thead><tr><th>顺序</th><th>展位</th><th>企业</th><th>可投岗位</th><th>专业 / 技能要求</th><th>简历邮箱</th></tr></thead>
+      <tbody>{{TABLE_B}}</tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2><span class="no">5</span>C类 · 第三优先：{{TIER_C_TITLE}}（{{N_C}}家）</h2>
+    <p class="desc">{{TIER_C_DESC}}</p>
+    <table>
+      <thead><tr><th>顺序</th><th>展位</th><th>企业</th><th>可投岗位</th><th>专业 / 技能要求</th><th>简历邮箱</th></tr></thead>
+      <tbody>{{TABLE_C}}</tbody>
+    </table>
+    <div class="note">📌 筛选口径说明：{{SCREENING_CRITERIA}}</div>
+  </section>
+
+  <section>
+    <h2><span class="no">6</span>投递执行建议</h2>
+    <div class="tips">
+      <div class="tip"><b>⏰ 时间策略</b>开馆即进，前 60–90 分钟精力最好，集中攻 A类核心岗；B类穿插在动线中；C类留到最后顺路兜底。</div>
+      <div class="tip"><b>📄 材料准备</b>纸质简历带 15–20 份（按目标岗位定制一版，突出技能栈与项目）；手机存 PDF 版，遇邮箱异常直接扫码或发送。</div>
+      <div class="tip"><b>💬 每站5–8分钟话术</b>递简历 → 一句话介绍（学校+专业+届别+技能栈+一个项目）→ 问三个问题：是否招目标届别应届 / 技术栈与培养方向 / 后续面试流程与时间。得到答复立即记录。</div>
+      <div class="tip"><b>📝 现场记录</b>用手机备忘录按「展位号-公司-岗位-HR姓氏-承诺反馈时间」四列记录；排队超过10分钟的展位先跳过、记下号稍后回访。</div>
+      <div class="tip"><b>👔 着装与状态</b>商务休闲即可，干净整洁；带水和小包，全程步行数公里，舒适的鞋比西装更重要。</div>
+      <div class="tip"><b>🔁 离场前复查</b>对照本页清单核对全部企业是否走到；遗漏的用备用出入口补投；回家当晚给聊过的 HR 发跟进邮件（附简历PDF）。</div>
+    </div>
+  </section>
+
+  <div class="footer">数据整理自 {{DATA_SOURCE_NOTE}} ｜ 生成日期 {{GEN_DATE}}</div>
+</div>
+</body>
+</html>
